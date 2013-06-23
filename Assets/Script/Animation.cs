@@ -19,6 +19,10 @@ public class Animation : MonoBehaviour {
 	public bool IfFixedRotation = true;
 	private Quaternion InitRotation;
 	
+	public bool IfReadTextureFromResource = false;
+	public string Path  = null;
+	public string Name = null;
+	
 	// Use this for initialization
 	void Start () {
 		if ( PictureMesh == null )
@@ -30,6 +34,23 @@ public class Animation : MonoBehaviour {
 		if ( PictureMesh.GetComponent<Collider>() )
 			PictureMesh.GetComponent<Collider>().enabled = false;
 		InitRotation = PictureMesh.transform.rotation;
+		
+		if ( IfReadTextureFromResource )
+		{
+			if ( Name == null )
+				Name = name;
+			if( Path != null )
+			{
+				
+				
+				Texture tex = Resources.Load( Path + "/" + Name ) as Texture;
+				if ( PictureMesh.renderer)
+					PictureMesh.renderer.sharedMaterial.mainTexture = tex;
+			}
+			
+		}
+		
+		
 		
 	}
 	

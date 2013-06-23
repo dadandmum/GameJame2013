@@ -6,6 +6,8 @@ using System.Collections.Generic;
 
 public class PlayerControl : MonoBehaviour {
 	
+	static bool MyEnable = true;
+	
 	static string ColliderTag = "LEVEL";
 	
 	public enum MoveDirection{ Left , Right };
@@ -84,6 +86,8 @@ public class PlayerControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		if ( MyEnable )
+		{
 		if ( ShouldGoRight() )
 			GoRight();
 		if ( ShouldGoLeft() )
@@ -95,6 +99,7 @@ public class PlayerControl : MonoBehaviour {
 		SetVelocity();
 		Smooth();
 		JudgeIfInAir();
+		}
 	}
 	
 	bool ShouldGoRight(){
@@ -322,17 +327,53 @@ public class PlayerControl : MonoBehaviour {
 	}
 	
 	void OnGUI(){
-		GUILayout.Label( "IfInAir" + CheckIfInAir() );	
-		if ( GUILayout.Button( "Add Left Leg" ) )
+		//GUILayout.Label( "IfInAir" + CheckIfInAir() );	
+		//if ( GUILayout.Button( "Add Left Leg" ) )
+		//{
+		//	player.SendMessage( "OnAddOrgan" , "LeftLeg" , SendMessageOptions.DontRequireReceiver );
+		//}
+		
+		if ( die_time > 0 )
 		{
-			player.SendMessage( "OnAddOrgan" , "LeftLeg" , SendMessageOptions.DontRequireReceiver );
+			Rect rect = new Rect( Screen.width / 2 -  468f / 2  , Screen.height / 2 - 237f / 2 , 468f , 237f );
+			Texture pic = Resources.Load( "Death/Faint" + ( frame + 1 ) ) as Texture;
+			
+			Rect rect_black = new Rect( 0f , 0f , Screen.width , Screen.height );
+			Texture black = Resources.Load( "Death/Black" ) as Texture;
+			
+			GUI.color  = new Color ( 1.0f , 1.0f , 1.0f , 0.7f );
+			GUI.DrawTexture( rect_black , black );
+			
+			GUI.color  = new Color ( 1.0f , 1.0f , 1.0f , 1.0f );
+			GUI.DrawTexture( rect , pic );
+			if ( die_time > FrameDeltaTime )
+			{
+				frame = ( frame + 1 ) % 4 ;
+				die_time = Time.deltaTime;
+			}else{
+				die_time += Time.deltaTime;	
+			}
+			if ( Input.GetKeyDown( KeyCode.Space ) )
+			{
+				player.transform.position = RevivePoint;
+				IfInAir = true;
+				die_time = -1f;
+				MyEnable = true;
+			}
 		}
+		
 		
 	}
 	
+	public float DeathTime = 3f;
+	static private float die_time = -1f;
+	public int frame = 0;
+	static public float FrameDeltaTime = 0.2f;
+	
 	static public void OnDead(){
-		player.transform.position = RevivePoint;
-		IfInAir = true;
+		MyEnable = false;
+		die_time = 0.01f;
+		
 	}
 	
 	void OnAddOrgan( string OrganName ){
@@ -385,4 +426,39 @@ public class PlayerControl : MonoBehaviour {
 			vel = Vector3.Cross( LocateNormal , Vector3.forward ) * ( HorizontalSpeed - LocatePlatForm.GetSpeed() + GetOrganSpeed() ) * velocity_factor;
 		return vel;
 	}
+	
+	static public void OnLoseLeg(){
+		GameObject leg = null;
+		if ( Random.Range( 0 , 2 ) == 1 )
+		{
+			if ( player.GetComponent<PlayerControl>().LeftLegs.Count > 0 )
+			{
+				leg = player.GetComponent<PlayerControl>().LeftLegs[0];
+				player.GetComponent<PlayerControl>().LeftLegs.RemoveAt( 0 ) ;
+			}
+			if ( leg == null )
+			if ( player.GetComponent<PlayerControl>().RightLegs.Count > 0 )
+			{
+				leg = player.GetComponent<PlayerControl>().RightLegs[0];
+				player.GetComponent<PlayerControl>().RightLegs.RemoveAt( 0 ) ;
+			}
+		}else{
+			if ( player.GetComponent<PlayerControl>().RightLegs.Count > 0 )
+			{
+				leg = player.GetComponent<PlayerControl>().RightLegs[0];
+				player.GetComponent<PlayerControl>().RightLegs.RemoveAt( 0 ) ;
+			}
+			if ( leg == null )
+			if ( player.GetComponent<PlayerControl>().LeftLegs.Count > 0 )
+			{
+				leg = player.GetComponent<PlayerControl>().LeftLegs[0];
+				player.GetComponent<PlayerControl>().LeftLegs.RemoveAt( 0 ) ;
+			}
+		}
+		if ( leg == null )
+			return ;
+		leg.GetComponent<Organ>().IfFadeeOut = true;
+		
+	}
+	
 }

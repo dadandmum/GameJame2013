@@ -24,14 +24,22 @@ public class Organ : MonoBehaviour {
 	
 	private float inner_time = 0f;
 	
+	public bool IfLink = true;
+	public bool IfFadeeOut = false;
+	public float fade_time = 0;
+	public float FadeTime = 2f;
+	
 	// Use this for initialization
 	void Start () {
 		max_omiga = MaxOmiga / 180f * Mathf.PI;
 		InitInitialTime = InitialTime + Random.Range( -0.1f,0.1f);
+		renderer.sharedMaterial.mainTexture = Resources.Load("Player/" + name ) as Texture;
 	}
 	
 	// Update is called once per frame
 	void Update () {
+		
+		//change constant
 		transform.localScale = PlayerControl.player.transform.localScale;
 		Vector3 s = transform.localScale;
 		s.z = 0.01f;
@@ -40,15 +48,18 @@ public class Organ : MonoBehaviour {
 		if ( PlayerControl.player )
 			k = 0.1f * PlayerControl.player.GetComponent<PlayerControl>().GetSpeed().magnitude;
 		
-		
 		RotateTime = MaxRotateTime / (1f + k);
 		InitialTime = InitInitialTime / ( 1f + k );
+		
+		
 		UpdateOrgan( );
+		FadeOut();
 	}
 	
 	void UpdateOrgan( )
 	{
-		transform.position = PlayerControl.player.transform.position + LocalPosition * transform.localScale.x;
+		if ( IfLink )
+			transform.position = PlayerControl.player.transform.position + LocalPosition * transform.localScale.x;
 		Debug.Log("Inner Time" + inner_time );
 		if ( IfRotate )
 		{
@@ -101,6 +112,15 @@ public class Organ : MonoBehaviour {
 		IfChangeColor = o.IfChangeColor;
 		ChangeColorTo = o.ChangeColorTo;
 	
+	}
+	
+	public void FadeOut(){
+		if ( !IfFadeeOut )
+			return ;
+		fade_time += Time.deltaTime;
+		renderer.sharedMaterial.color = new Color ( 1f , 1f , 1f , 1f - ( fade_time / FadeTime ));
+		if ( fade_time >= FadeTime )
+		GameObject.Destroy( this.gameObject );
 	}
 	
 	
